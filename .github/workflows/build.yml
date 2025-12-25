@@ -1,0 +1,93 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - os: linux
+            runner: ubuntu-latest
+            arch: x86_64
+            target: x86_64-unknown-linux-gnu
+
+          # Linux ARM64
+          - os: linux
+            runner: ubuntu-latest
+            arch: aarch64
+            target: aarch64-unknown-linux-gnu
+
+          # macOS x86_64 (Intel)
+          - os: macos
+            runner: macos-15-intel
+            arch: x86_64
+            target: x86_64-apple-darwin
+
+          # macOS ARM64 (Apple Silicon)
+          - os: macos
+            runner: macos-latest
+            arch: arm64
+            target: aarch64-apple-darwin
+
+          # Windows x86_64
+          - os: windows
+            runner: windows-latest
+            arch: x86_64
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Install cross-compilation dependencies (Linux ARM64)
+        if: matrix.os == 'linux' && matrix.arch == 'aarch64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      - name: Build library
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload artifacts (Linux)
+        if: matrix.os == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tegra_swizzle-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            target/${{ matrix.target }}/release/libtegra_swizzle.so
+            target/${{ matrix.target }}/release/libtegra_swizzle.a
+
+      - name: Upload artifacts (macOS)
+        if: matrix.os == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tegra_swizzle-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            target/${{ matrix.target }}/release/libtegra_swizzle.dylib
+            target/${{ matrix.target }}/release/libtegra_swizzle.a
+
+      - name: Upload artifacts (Windows)
+        if: matrix.os == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tegra_swizzle-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            target/${{ matrix.target }}/release/tegra_swizzle.dll
+            target/${{ matrix.target }}/release/tegra_swizzle.lib
+            target/${{ matrix.target }}/release/tegra_swizzle.dll.lib
