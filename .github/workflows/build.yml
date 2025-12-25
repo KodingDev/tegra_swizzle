@@ -71,7 +71,6 @@ jobs:
           name: tegra_swizzle-${{ matrix.os }}-${{ matrix.arch }}
           path: |
             target/${{ matrix.target }}/release/libtegra_swizzle.so
-            target/${{ matrix.target }}/release/libtegra_swizzle.a
 
       - name: Upload artifacts (macOS)
         if: matrix.os == 'macos'
@@ -80,7 +79,6 @@ jobs:
           name: tegra_swizzle-${{ matrix.os }}-${{ matrix.arch }}
           path: |
             target/${{ matrix.target }}/release/libtegra_swizzle.dylib
-            target/${{ matrix.target }}/release/libtegra_swizzle.a
 
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows'
@@ -89,5 +87,3 @@ jobs:
           name: tegra_swizzle-${{ matrix.os }}-${{ matrix.arch }}
           path: |
             target/${{ matrix.target }}/release/tegra_swizzle.dll
-            target/${{ matrix.target }}/release/tegra_swizzle.lib
-            target/${{ matrix.target }}/release/tegra_swizzle.dll.lib
